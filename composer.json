@@ -1,6 +1,5 @@
 {
     "name": "csdavidson/laravel-elastica",
-    "version": "0.1.0",
     "description": "Laravel 5 Service provider and Facade wrapping ruflin/Elastica",
     "license": "MIT",
     "authors": [
