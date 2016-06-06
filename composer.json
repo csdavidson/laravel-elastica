@@ -17,6 +17,5 @@
         "psr-4": {
             "CsDavidson\\LaravelElastica\\": "src/"
         }
-    },
-    "minimum-stability": "stable"
+    }
 }
