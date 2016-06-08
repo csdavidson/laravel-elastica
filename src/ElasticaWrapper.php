@@ -2,8 +2,12 @@
 namespace CsDavidson\LaravelElastica;
 
 use Elastica\Client;
+use Elastica\Document;
 use Elastica\Index;
+use Elastica\Query;
 use Elastica\Response;
+use Elastica\ResultSet\BuilderInterface;
+use Elastica\Search;
 use Elastica\Type;
 use Elastica\Type\Mapping;
 use Psr\Log\LoggerInterface;
@@ -20,13 +24,31 @@ class ElasticaWrapper
     protected static $_client;
 
     /**
-     * @param array $config
-     * @param null $callback
-     * @param LoggerInterface|null $logger
+     * @param $document_id
+     * @param array $document_data
+     * @param Type $type
+     * @param bool $refresh_index
+     * @return bool|Document
      */
-    public function initClient(array $config, $callback=null, LoggerInterface $logger=null)
+    public static function addDocument($document_id, array $document_data=[], Type $type, $refresh_index=true)
     {
-        static::$_client = new Client($config, $callback, $logger);
+        $document = new Document($document_id, $document_data);
+
+        /**
+         * @var Response $response
+         */
+        $response = $type->addDocument($document);
+
+        if ($response->isOk() && !$response->hasError()) {
+            // Refresh the index to make the new document searchable
+            if ($refresh_index) {
+                $type->getIndex()->refresh();
+            }
+
+            return $document;
+        }
+
+        return false;
     }
 
     /**
@@ -51,14 +73,39 @@ class ElasticaWrapper
         
         return false;
     }
-    
+
+    /**
+     * @param $id
+     * @param array $data
+     * @param Type|null $type
+     * @param Index|null $index
+     * @return Document
+     */
+    public static function getDocument($id, $data=[], Type $type=null, Index $index=null)
+    {
+        if (null === $index && $type instanceof Type) {
+            $index = $type->getIndex();
+        }
+
+        return new Document($id, $data, $type, $index);
+    }
+
     /**
      * @param $name
      * @return Index
      */
-    public static function index($name)
+    public static function getIndex($name)
     {
         return static::$_client->getIndex($name);
+    }
+
+    /**
+     * @param $query
+     * @return Query
+     */
+    public static function getQuery($query=null)
+    {
+        return new Query($query);
     }
 
     /**
@@ -66,9 +113,65 @@ class ElasticaWrapper
      * @param array $properties
      * @return Mapping
      */
-    public static function mapping(Type $type=null, array $properties=[])
+    public static function getMapping(Type $type=null, array $properties=[])
     {
         return new Mapping($type, $properties);
+    }
+
+    /**
+     * @param Type $type
+     * @param Query|null $query
+     * @param array $options
+     * @param BuilderInterface|null $builder
+     * @return Search
+     */
+    public static function getSearch(Type $type, Query $query=null, array $options=[], BuilderInterface $builder=null)
+    {
+        $search = new Search(static::$_client, $builder);
+        $search->addType($type);
+        $search->addIndex($type->getIndex());
+        $search->setOptions($options);
+        $search->setQuery($query);
+
+        return $search;
+    }
+
+    /**
+     * @param Index $index
+     * @param $name
+     * @return Type
+     */
+    public static function getType(Index $index, $name)
+    {
+        return new Type($index, $name);
+    }
+
+    /**
+     * @param array $config
+     * @param null $callback
+     * @param LoggerInterface|null $logger
+     */
+    public function initClient(array $config, $callback=null, LoggerInterface $logger=null)
+    {
+        static::$_client = new Client($config, $callback, $logger);
+    }
+
+    /**
+     * @param Query $query
+     * @param Type $type
+     * @param array $options
+     * @param BuilderInterface|null $builder
+     * @return \Elastica\ResultSet
+     */
+    public static function search(Query $query, Type $type, array $options=[], BuilderInterface $builder=null)
+    {
+        $search = new Search(static::$_client, $builder);
+        $search->addType($type);
+        $search->addIndex($type->getIndex());
+        $search->setOptions($options);
+        $search->setQuery($query);
+
+        return $search->search();
     }
 
     /**
@@ -94,15 +197,5 @@ class ElasticaWrapper
         }
 
         return false;
-    }
-
-    /**
-     * @param Index $index
-     * @param $name
-     * @return Type
-     */
-    public static function type(Index $index, $name)
-    {
-        return new Type($index, $name);
     }
 }
