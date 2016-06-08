@@ -5,7 +5,6 @@ use Elastica\Client;
 use Elastica\Document;
 use Elastica\Index;
 use Elastica\Query;
-use Elastica\Response;
 use Elastica\ResultSet\BuilderInterface;
 use Elastica\Search;
 use Elastica\Type;
@@ -19,14 +18,14 @@ use Psr\Log\LoggerInterface;
 class ElasticaWrapper
 {
     /**
-     * @var Client
+     * @var \Elastica\Client
      */
     protected static $_client;
 
     /**
      * @param $document_id
      * @param array $document_data
-     * @param Type $type
+     * @param \Elastica\Type $type
      * @param bool $refresh_index
      * @return bool|\Elastica\Document
      */
@@ -35,7 +34,7 @@ class ElasticaWrapper
         $document = new Document($document_id, $document_data);
 
         /**
-         * @var Response $response
+         * @var \Elastica\Response $response
          */
         $response = $type->addDocument($document);
 
@@ -63,7 +62,7 @@ class ElasticaWrapper
 
         /**
          * Create the Index on ElasticSearch
-         * @var Response $response
+         * @var \Elastica\Response $response
          */
         $response = $index->create($index_args, $options);
         
@@ -77,8 +76,8 @@ class ElasticaWrapper
     /**
      * @param $id
      * @param array $data
-     * @param Type|null $type
-     * @param Index|null $index
+     * @param \Elastica\Type|null $type
+     * @param \Elastica\Index|null $index
      * @return \Elastica\Document
      */
     public static function getDocument($id, $data=[], Type $type=null, Index $index=null)
@@ -109,7 +108,7 @@ class ElasticaWrapper
     }
 
     /**
-     * @param Type|null $type
+     * @param \Elastica\Type|null $type
      * @param array $properties
      * @return \Elastica\Type\Mapping
      */
@@ -119,10 +118,10 @@ class ElasticaWrapper
     }
 
     /**
-     * @param Type $type
-     * @param Query|null $query
+     * @param \Elastica\Type $type
+     * @param \Elastica\Query|null $query
      * @param array $options
-     * @param BuilderInterface|null $builder
+     * @param \Elastica\ResultSet\BuilderInterface|null $builder
      * @return \Elastica\Search
      */
     public static function getSearch(Type $type, Query $query=null, array $options=[], BuilderInterface $builder=null)
@@ -137,7 +136,7 @@ class ElasticaWrapper
     }
 
     /**
-     * @param Index $index
+     * @param \Elastica\Index $index
      * @param $name
      * @return \Elastica\Type
      */
@@ -149,7 +148,7 @@ class ElasticaWrapper
     /**
      * @param array $config
      * @param null $callback
-     * @param LoggerInterface|null $logger
+     * @param \Psr\Log\LoggerInterface|null $logger
      */
     public function initClient(array $config, $callback=null, LoggerInterface $logger=null)
     {
@@ -157,10 +156,10 @@ class ElasticaWrapper
     }
 
     /**
-     * @param Query $query
-     * @param Type $type
+     * @param \Elastica\Query $query
+     * @param \Elastica\Type $type
      * @param array $options
-     * @param BuilderInterface|null $builder
+     * @param \Elastica\ResultSet\BuilderInterface|null $builder
      * @return \Elastica\ResultSet
      */
     public static function search(Query $query, Type $type, array $options=[], BuilderInterface $builder=null)
@@ -175,7 +174,7 @@ class ElasticaWrapper
     }
 
     /**
-     * @param Type $type
+     * @param \Elastica\Type $type
      * @param array $mapping_properties
      * @param array $mapping_params
      * @return bool|\Elastica\Type\Mapping
