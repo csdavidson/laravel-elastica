@@ -5,6 +5,7 @@ use Elastica\Client;
 use Elastica\Document;
 use Elastica\Index;
 use Elastica\Query;
+use Elastica\ResultSet;
 use Elastica\ResultSet\BuilderInterface;
 use Elastica\Search;
 use Elastica\Type;
@@ -156,19 +157,48 @@ class ElasticaWrapper
     }
 
     /**
+     * @param \Elastica\ResultSet $result_set
+     * @return array
+     */
+    public function parseResultSetHits(ResultSet $result_set)
+    {
+        $parsed_results = [];
+
+        foreach ($result_set->getResults() as $result) {
+            $hit        = $result->getHit();
+            $hit_fields = [];
+
+            foreach ($hit['fields'] as $field_name => $value) {
+                $hit_fields[$field_name] = $value[0];
+            }
+
+            $parsed_results[] = $hit_fields;
+        }
+
+        return $parsed_results;
+    }
+
+    /**
      * @param \Elastica\Query $query
      * @param \Elastica\Type $type
+     * @param bool $parse_hit_fields
      * @param array $options
      * @param \Elastica\ResultSet\BuilderInterface|null $builder
      * @return \Elastica\ResultSet
      */
-    public function search(Query $query, Type $type, array $options=[], BuilderInterface $builder=null)
+    public function search(Query $query, Type $type, $parse_hit_fields=true, array $options=[], BuilderInterface $builder=null)
     {
         $search = new Search($this->_client, $builder);
         $search->addType($type);
         $search->addIndex($type->getIndex());
         $search->setOptions($options);
         $search->setQuery($query);
+
+        $search_result_set = $search->search();
+
+        if ($parse_hit_fields) {
+            return $this->parseResultSetHits($search_result_set);
+        }
 
         return $search->search();
     }
