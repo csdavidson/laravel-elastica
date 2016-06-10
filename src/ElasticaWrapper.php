@@ -20,7 +20,7 @@ class ElasticaWrapper
     /**
      * @var \Elastica\Client
      */
-    protected static $_client;
+    protected $_client;
 
     /**
      * @param $document_id
@@ -29,7 +29,7 @@ class ElasticaWrapper
      * @param bool $refresh_index
      * @return bool|\Elastica\Document
      */
-    public static function addDocument($document_id, array $document_data=[], Type $type, $refresh_index=true)
+    public function addDocument($document_id, array $document_data=[], Type $type, $refresh_index=true)
     {
         $document = new Document($document_id, $document_data);
 
@@ -56,9 +56,9 @@ class ElasticaWrapper
      * @param array $options
      * @return bool|\Elastica\Index
      */
-    public static function createIndex($name, array $index_args, $options=['recreate'=>true])
+    public function createIndex($name, array $index_args, $options=['recreate'=>true])
     {
-        $index = static::$_client->getIndex($name);
+        $index = $this->_client->getIndex($name);
 
         /**
          * Create the Index on ElasticSearch
@@ -80,7 +80,7 @@ class ElasticaWrapper
      * @param \Elastica\Index|null $index
      * @return \Elastica\Document
      */
-    public static function getDocument($id, $data=[], Type $type=null, Index $index=null)
+    public function getDocument($id, $data=[], Type $type=null, Index $index=null)
     {
         if (null === $index && $type instanceof Type) {
             $index = $type->getIndex();
@@ -93,16 +93,16 @@ class ElasticaWrapper
      * @param $name
      * @return \Elastica\Index
      */
-    public static function getIndex($name)
+    public function getIndex($name)
     {
-        return static::$_client->getIndex($name);
+        return $this->_client->getIndex($name);
     }
 
     /**
      * @param $query
      * @return \Elastica\Query
      */
-    public static function getQuery($query=null)
+    public function getQuery($query=null)
     {
         return new Query($query);
     }
@@ -112,7 +112,7 @@ class ElasticaWrapper
      * @param array $properties
      * @return \Elastica\Type\Mapping
      */
-    public static function getMapping(Type $type=null, array $properties=[])
+    public function getMapping(Type $type=null, array $properties=[])
     {
         return new Mapping($type, $properties);
     }
@@ -124,9 +124,9 @@ class ElasticaWrapper
      * @param \Elastica\ResultSet\BuilderInterface|null $builder
      * @return \Elastica\Search
      */
-    public static function getSearch(Type $type, Query $query=null, array $options=[], BuilderInterface $builder=null)
+    public function getSearch(Type $type, Query $query=null, array $options=[], BuilderInterface $builder=null)
     {
-        $search = new Search(static::$_client, $builder);
+        $search = new Search($this->_client, $builder);
         $search->addType($type);
         $search->addIndex($type->getIndex());
         $search->setOptions($options);
@@ -140,7 +140,7 @@ class ElasticaWrapper
      * @param $name
      * @return \Elastica\Type
      */
-    public static function getType(Index $index, $name)
+    public function getType(Index $index, $name)
     {
         return new Type($index, $name);
     }
@@ -152,7 +152,7 @@ class ElasticaWrapper
      */
     public function initClient(array $config, $callback=null, LoggerInterface $logger=null)
     {
-        static::$_client = new Client($config, $callback, $logger);
+        $this->_client = new Client($config, $callback, $logger);
     }
 
     /**
@@ -162,9 +162,9 @@ class ElasticaWrapper
      * @param \Elastica\ResultSet\BuilderInterface|null $builder
      * @return \Elastica\ResultSet
      */
-    public static function search(Query $query, Type $type, array $options=[], BuilderInterface $builder=null)
+    public function search(Query $query, Type $type, array $options=[], BuilderInterface $builder=null)
     {
-        $search = new Search(static::$_client, $builder);
+        $search = new Search($this->_client, $builder);
         $search->addType($type);
         $search->addIndex($type->getIndex());
         $search->setOptions($options);
@@ -179,7 +179,7 @@ class ElasticaWrapper
      * @param array $mapping_params
      * @return bool|\Elastica\Type\Mapping
      */
-    public static function sendMapping(Type $type, array $mapping_properties=[], array $mapping_params=[])
+    public function sendMapping(Type $type, array $mapping_properties=[], array $mapping_params=[])
     {
         $mapping = new Mapping($type, $mapping_properties);
 
